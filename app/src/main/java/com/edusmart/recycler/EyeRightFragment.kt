@@ -20,97 +20,44 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.core.Preview
 import androidx.camera.core.CameraSelector
 import android.util.Log
+import androidx.camera.view.PreviewView
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
+class EyeRightFragment : Fragment() , CameraPreviewListener {
+    private lateinit var binding: FragmentEyeRightBinding
+    private lateinit var cameraProvider: ProcessCameraProvider
+    private var cameraPreviewView: PreviewView? = null
 
-/**
- * A simple [Fragment] subclass.
- * Use the [EyeRightFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class EyeRightFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
-
-    //private lateinit var viewBinding: FragmentEyeBinding
-
-    private var _binding: FragmentEyeRightBinding? = null
-    private val binding get() = _binding!!
-
-    private var imageCapture: ImageCapture? = null
-    private lateinit var cameraExecutor: ExecutorService
-
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        //viewBinding = FragmentEyeBinding.inflate(layoutInflater)
-
-
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-        Toast.makeText(this.context,"Param1 = $param1", Toast.LENGTH_SHORT).show()
-        startCamera()
-
-        cameraExecutor = Executors.newSingleThreadExecutor()
-    }
-    private fun allPermissionsGranted() = EyeRightFragment.REQUIRED_PERMISSIONS.all {
-        context?.let { it1 ->
-            ContextCompat.checkSelfPermission(
-                it1, it)
-        } == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
-
-        cameraProviderFuture.addListener({
-            // Used to bind the lifecycle of cameras to the lifecycle owner
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-
-            // Preview
-            val preview = Preview.Builder()
-                .build()
-                .also {
-                    it.setSurfaceProvider(binding.viewFinder.surfaceProvider)
-                }
-
-            // Select back camera as a default
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-            try {
-                // Unbind use cases before rebinding
-                cameraProvider.unbindAll()
-
-                // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview)
-
-            } catch(exc: Exception) {
-                Log.e(TAG, "Use case binding failed", exc)
-            }
-
-        }, ContextCompat.getMainExecutor(requireContext()))
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        _binding =  FragmentEyeRightBinding.inflate(inflater, container, false)
-
-        /*val layoutParams = frag.layoutParams as LinearLayout.LayoutParams
-        layoutParams.weight = 1f
-        layoutParams.height = 1000
-        layoutParams.gravity = Gravity.CENTER_VERTICAL
-        */
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        binding = FragmentEyeRightBinding.inflate(inflater, container, false)
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Verificar se já temos o PreviewView disponível
+        if (cameraPreviewView != null) {
+            setupCameraPreview()
+        }
+    }
+
+    override fun onCameraPreviewAvailable(previewView: PreviewView) {
+        cameraPreviewView = previewView
+        // Verificar se a view já foi criada
+        if (view != null) {
+            setupCameraPreview()
+        }
+    }
+
+    private fun setupCameraPreview() {
+        // Use o PreviewView para configurar a visualização da câmera neste fragmento
+        binding.viewFinder.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+        Log.d(TAG, "ENTROUUUU")
+    //binding.viewFinder.setSurfaceProvider(cameraPreviewView?.surfaceProvider)
     }
 
     companion object {
@@ -143,10 +90,5 @@ class EyeRightFragment : Fragment() {
                     add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 }
             }.toTypedArray()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }

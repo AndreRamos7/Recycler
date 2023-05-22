@@ -26,6 +26,7 @@ import android.widget.Toast
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
+import androidx.camera.view.PreviewView
 import androidx.core.content.PermissionChecker
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
@@ -33,7 +34,8 @@ import java.util.Locale
 
 
 class VRActivity : AppCompatActivity() {
-
+    private lateinit var esquerdo: EyeLeftFragment
+    private lateinit var direito: EyeRightFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,14 +55,14 @@ class VRActivity : AppCompatActivity() {
         setContentView(R.layout.activity_vractivity)
 
         if(savedInstanceState == null) {
-            /*val esquerdo = EyeLeftFragment.newInstance("Esquerdo","")
-            val direito = EyeRightFragment.newInstance("Direito", "")
+            esquerdo = EyeLeftFragment.newInstance("Esquerdo","")
+            direito = EyeRightFragment.newInstance("Direito", "")
 
             supportFragmentManager
                 .beginTransaction()
                 .add(R.id.conteiner_root, esquerdo, "EyeLeftTag")
                 .add(R.id.conteiner_root, direito, "EyeRightTag")
-                .commit()*/
+                .commit()
         }
 
         // Request camera permissions

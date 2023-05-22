@@ -11,7 +11,7 @@
     android:baselineAligned="false"
     tools:context=".VRActivity">
 
-<!--
+
 
     <fragment android:name="com.edusmart.recycler.EyeLeftFragment"
         android:id="@+id/olhoesquerdo"
@@ -25,5 +25,5 @@
         android:layout_width="0dp"
         android:background="@drawable/rounded_view"
         android:layout_height="match_parent" />
--->
+
 </LinearLayout>

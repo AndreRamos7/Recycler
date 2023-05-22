@@ -9,6 +9,7 @@ import android.widget.Toast
 
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.camera.core.ImageCapture
@@ -20,6 +21,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.core.Preview
 import androidx.camera.core.CameraSelector
 import android.util.Log
+import androidx.lifecycle.ViewModelProvider
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -32,84 +34,51 @@ private const val ARG_PARAM2 = "param2"
  * create an instance of this fragment.
  */
 class EyeLeftFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private lateinit var binding: FragmentEyeLeftBinding
+    private lateinit var cameraProvider: ProcessCameraProvider
+    private var cameraPreviewListener: CameraPreviewListener? = null
 
-    //private lateinit var viewBinding: FragmentEyeBinding
-
-    private var _binding: FragmentEyeLeftBinding? = null
-    private val binding get() = _binding!!
-
-    private var imageCapture: ImageCapture? = null
-    private lateinit var cameraExecutor: ExecutorService
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        //viewBinding = FragmentEyeBinding.inflate(layoutInflater)
-
-
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-        Toast.makeText(this.context,"Param1 = $param1", Toast.LENGTH_SHORT).show()
-        startCamera()
-
-        cameraExecutor = Executors.newSingleThreadExecutor()
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        binding = FragmentEyeLeftBinding.inflate(inflater, container, false)
+        return binding.root
     }
-    private fun allPermissionsGranted() = EyeLeftFragment.REQUIRED_PERMISSIONS.all {
-        context?.let { it1 ->
-            ContextCompat.checkSelfPermission(
-                it1, it)
-        } == PackageManager.PERMISSION_GRANTED
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        startCamera()
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        if (context is CameraPreviewListener) {
+            cameraPreviewListener = context
+        }
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        cameraPreviewListener = null
     }
 
     private fun startCamera() {
+        // Configurar a câmera e a visualização da câmera (preview)
+
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
-
         cameraProviderFuture.addListener({
-            // Used to bind the lifecycle of cameras to the lifecycle owner
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+            cameraProvider = cameraProviderFuture.get()
 
-            // Preview
-            val preview = Preview.Builder()
-                .build()
-                .also {
-                    it.setSurfaceProvider(binding.viewFinder2.surfaceProvider)
-                }
-
-            // Select back camera as a default
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            val cameraSelector = CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
+            val preview = Preview.Builder().build()
 
             try {
-                // Unbind use cases before rebinding
                 cameraProvider.unbindAll()
-
-                // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview)
-
-            } catch(exc: Exception) {
-                Log.e(TAG, "Use case binding failed", exc)
+                val camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview)
+                val previewView = binding.viewFinder2
+                cameraPreviewListener?.onCameraPreviewAvailable(previewView)
+            } catch (exception: Exception) {
+                // Lidar com erros ao abrir a câmera
             }
-
         }, ContextCompat.getMainExecutor(requireContext()))
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        _binding =  FragmentEyeLeftBinding.inflate(inflater, container, false)
-
-        /*val layoutParams = frag.layoutParams as LinearLayout.LayoutParams
-        layoutParams.weight = 1f
-        layoutParams.height = 1000
-        layoutParams.gravity = Gravity.CENTER_VERTICAL
-        */
-        return binding.root
     }
 
     companion object {
@@ -124,7 +93,7 @@ class EyeLeftFragment : Fragment() {
         // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
-            EyeRightFragment().apply {
+            EyeLeftFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_PARAM1, param1)
                     putString(ARG_PARAM2, param2)
@@ -142,10 +111,5 @@ class EyeLeftFragment : Fragment() {
                     add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 }
             }.toTypedArray()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }
