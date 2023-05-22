@@ -6,12 +6,13 @@ import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.edusmart.recycler.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var viewBinding: ActivityMainBinding
-
+    private lateinit var cameraViewModel: CameraViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
@@ -29,7 +30,7 @@ class MainActivity : AppCompatActivity() {
             iniciarCamera()
         })
 
-
+        cameraViewModel = ViewModelProvider(this)[CameraViewModel::class.java]
     }
 
     private fun iniciarCamera() {
