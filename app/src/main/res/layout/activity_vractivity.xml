@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/conteiner_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/fullscreenBackgroundColor"
+    android:orientation="horizontal"
+    android:theme="@style/ThemeOverlay.Recycler.FullscreenContainer"
+    android:baselineAligned="false"
+    tools:context=".VRActivity">
+
+<!--
+
+    <fragment android:name="com.edusmart.recycler.EyeLeftFragment"
+        android:id="@+id/olhoesquerdo"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent" />
+
+    <fragment android:name="com.edusmart.recycler.EyeRightFragment"
+        android:id="@+id/olhodireito"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:background="@drawable/rounded_view"
+        android:layout_height="match_parent" />
+-->
+</LinearLayout>
