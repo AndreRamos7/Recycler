@@ -18,9 +18,25 @@
         android:id="@+id/textView3"
         android:layout_width="match_parent"
         android:layout_height="88dp"
+        android:paddingTop="10dp"
         android:text="@string/txv_nada_texto"
         android:textAlignment="center"
-        android:textColor="@color/light_blue_600"
-        android:textSize="24sp" />
+        android:textColor="@android:color/holo_green_dark"
+        android:textSize="34sp" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageButton
+            android:id="@+id/imageButton"
+            android:layout_width="97dp"
+            android:layout_height="83dp"
+            android:layout_marginBottom="50dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@drawable/trash" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>

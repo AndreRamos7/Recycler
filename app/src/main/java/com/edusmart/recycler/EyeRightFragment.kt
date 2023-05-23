@@ -55,9 +55,12 @@ class EyeRightFragment : Fragment() , CameraPreviewListener {
 
     private fun setupCameraPreview() {
         // Use o PreviewView para configurar a visualização da câmera neste fragmento
-        binding.viewFinder.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
-        Log.d(TAG, "ENTROUUUU")
-    //binding.viewFinder.setSurfaceProvider(cameraPreviewView?.surfaceProvider)
+
+        binding.viewFinder.post {
+            binding.viewFinder.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+            Log.d(TAG, "ENTROUUUU")
+//            binding.viewFinder.surfaceProvider = cameraPreviewView?.surfaceProvider!!
+        }
     }
 
     companion object {

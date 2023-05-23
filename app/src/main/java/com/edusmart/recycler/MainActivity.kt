@@ -28,6 +28,7 @@ class MainActivity : AppCompatActivity() {
         viewBinding.btnNormal.setOnClickListener(View.OnClickListener {
             Toast.makeText(this, "Botão clicado!", Toast.LENGTH_SHORT).show()
             iniciarCamera()
+
         })
 
         cameraViewModel = ViewModelProvider(this)[CameraViewModel::class.java]

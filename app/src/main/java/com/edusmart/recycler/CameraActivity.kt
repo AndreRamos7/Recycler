@@ -4,12 +4,18 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.media.AudioAttributes
+import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Display
+import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -18,6 +24,7 @@ import androidx.core.content.ContextCompat
 import com.edusmart.recycler.databinding.ActivityCameraBinding
 import org.tensorflow.lite.support.label.Category
 import org.tensorflow.lite.task.vision.classifier.Classifications
+import java.io.IOException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.min
@@ -28,6 +35,9 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
     private lateinit var viewBinding: ActivityCameraBinding
     private lateinit var bitmapBuffer: Bitmap
     private var imageAnalyzer: ImageAnalysis? = null
+    var mMediaPlayer: MediaPlayer? = null
+    private var score: Float = 0.0f
+    private var label: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +55,21 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
             )
         }
         cameraExecutor = Executors.newSingleThreadExecutor()
+        viewBinding.imageButton.setOnClickListener(View.OnClickListener {
+            if(score < 0.75f){
+                stopSound()
+                playSound(R.raw.fail)
+            }else{
+                stopSound()
+                if(label.equals("recycled")){
+                    playSound(R.raw.recycled)
+                }else if(label.equals("organic")){
+                    Log.d(TAG, "ORGANICO")
+                    playSound(R.raw.organic)
+                }
+            }
+
+        })
 
 
     }
@@ -68,7 +93,67 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
             }
         }
     }
+    private fun setImage(imgV: ImageView, bmp: Bitmap) {
+        this.runOnUiThread(Runnable {
+            imgV.setImageBitmap(bmp)
+        })
+    }
 
+    fun playContentUri(uri: Uri) {
+        var mMediaPlayer: MediaPlayer? = null
+        try {
+            mMediaPlayer = MediaPlayer().apply {
+                setDataSource(application, uri)
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+                )
+                prepare()
+                start()
+            }
+        } catch (exception: IOException) {
+            mMediaPlayer?.release()
+            mMediaPlayer = null
+        }
+    }
+
+    // 1. Plays the water sound
+    fun playSound(resource: Int) {
+        if (mMediaPlayer == null) {
+            mMediaPlayer = MediaPlayer.create(this,resource)
+            mMediaPlayer!!.isLooping = false
+            mMediaPlayer!!.start()
+            Log.d(TAG, "mMediaPlayer == null")
+        } else {
+            Log.d(TAG, "else (mMediaPlayer != null)")
+            mMediaPlayer!!.start()
+        }
+    }
+
+    // 2. Pause playback
+    fun pauseSound() {
+        if (mMediaPlayer?.isPlaying == true) mMediaPlayer?.pause()
+    }
+
+    // 3. Stops playback
+    fun stopSound() {
+        if (mMediaPlayer != null) {
+            mMediaPlayer!!.stop()
+            mMediaPlayer!!.release()
+            mMediaPlayer = null
+        }
+    }
+
+    // 4. Destroys the MediaPlayer instance when the app is closed
+    override fun onStop() {
+        super.onStop()
+        if (mMediaPlayer != null) {
+            mMediaPlayer!!.release()
+            mMediaPlayer = null
+        }
+    }
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
@@ -82,6 +167,7 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
                 .also {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
+
 
             // ImageAnalysis. Using RGBA 8888 to match how our models work
             imageAnalyzer =
@@ -109,6 +195,8 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
                                 )
                             }
 
+
+                            //this.setImage(viewBinding.viewFinder2, bitmapBuffer)
                             classifyImage(image)
                         }
                     }
@@ -207,8 +295,18 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
             // Show result on bottom sheet
             //classificationResultsAdapter.updateResults(results)
             //classificationResultsAdapter.notifyDataSetChanged()
-            Log.e(TAG, "resultados = " + (results?.get(0)?.categories?.get(0)?.label ?: "--")/*String.format("%", )*/)
-            setarTexto("resultados = " + (results?.get(0)?.categories?.get(0)?.label ?: "--"), (results?.get(0)?.categories?.get(0)?.score ?: 0.0f))
+            try{
+                if (results != null) {
+                    if(results.isNotEmpty()){
+                        //Log.e(TAG, "resultados = " + (results?.get(0)?.categories?.get(0)?.label ?: "--")/*String.format("%", )*/)
+                        setarTexto((results?.get(0)?.categories?.get(0)?.label ?: "--"), (results?.get(0)?.categories?.get(0)?.score ?: 0.0f))
+                    }
+                }
+            }catch (e: IndexOutOfBoundsException){
+                e.message?.let { Log.e(TAG, "AIAIAI: " + it) }
+            } finally {
+                // optional finally block
+            }
             results?.let { it ->
                 if (it.isNotEmpty()) {
                     val sortedCategories = it[0].categories.sortedBy { it?.label }
@@ -228,6 +326,9 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
     }
 
     private fun setarTexto(label: String?, score: Float?){
-        viewBinding.textView3.text = label
+        viewBinding.textView3.text = String.format("%s (%.2f)", label, score)
+        this.score = score!!
+        this.label = label!!
+
     }
 }
