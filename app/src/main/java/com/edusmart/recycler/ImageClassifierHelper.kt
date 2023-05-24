@@ -31,7 +31,7 @@ import org.tensorflow.lite.task.vision.classifier.Classifications
 import org.tensorflow.lite.task.vision.classifier.ImageClassifier
 
 class ImageClassifierHelper(
-    var threshold: Float = 0.8f,
+    var threshold: Float = 0.5f,
     var numThreads: Int = 2,
     var maxResults: Int = 3,
     var currentDelegate: Int = 0,

@@ -56,14 +56,16 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
         }
         cameraExecutor = Executors.newSingleThreadExecutor()
         viewBinding.imageButton.setOnClickListener(View.OnClickListener {
-            if(score < 0.75f){
+            if(score < 0.50f){
                 stopSound()
                 playSound(R.raw.fail)
             }else{
                 stopSound()
-                if(label.equals("recycled")){
+                Log.d(TAG, label)
+                if(this.label.trim() == "recycled"){
+                    Log.d(TAG, "recycled")
                     playSound(R.raw.recycled)
-                }else if(label.equals("organic")){
+                }else if(this.label.trim() == "organic"){
                     Log.d(TAG, "ORGANICO")
                     playSound(R.raw.organic)
                 }
