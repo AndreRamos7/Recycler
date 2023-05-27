@@ -15,6 +15,7 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Display
 import android.view.View
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.camera.core.*
@@ -25,10 +26,12 @@ import com.edusmart.recycler.databinding.ActivityCameraBinding
 import org.tensorflow.lite.support.label.Category
 import org.tensorflow.lite.task.vision.classifier.Classifications
 import java.io.IOException
+import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.min
-import java.util.Random
+import kotlin.math.roundToInt
+import kotlin.random.Random
 
 class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierListener {
     private lateinit var imageClassifierHelper: ImageClassifierHelper
@@ -40,13 +43,15 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
     private var score: Float = 0.0f
     private var label: String = ""
     private var residuo_para_procurar: Array<String> = arrayOf("organic", "recycled")
+    private var indexClasse: Int = Random.nextDouble().roundToInt()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+        override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
         viewBinding = ActivityCameraBinding.inflate(layoutInflater)
-        var indexClasse:Int = rand(1,2) - 1
+
         setContentView(viewBinding.root)
+
         viewBinding.textViewFind.text = String.format("Procure por um resíduo %s.", residuo_para_procurar[indexClasse])
 
         imageClassifierHelper =
@@ -61,6 +66,7 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
         }
         cameraExecutor = Executors.newSingleThreadExecutor()
         viewBinding.imageButton.setOnClickListener(View.OnClickListener {
+            it.visibility = ImageButton.INVISIBLE
             if(verificarResultado(residuo_para_procurar[indexClasse])){
                 viewBinding.textViewFind.text = String.format("Correto!!")
             }else{
@@ -74,22 +80,49 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
                 stopSound()
                 Log.d(TAG, label)
                 if(this.label.trim() == "recycled"){
-                    Log.d(TAG, "recycled")
+                    /*Log.d(TAG, "recycled")*/
                     playSound(R.raw.recycled)
                 }else if(this.label.trim() == "organic"){
-                    Log.d(TAG, "ORGANICO")
+                    /*Log.d(TAG, "ORGANICO")*/
                     playSound(R.raw.organic)
                 }
             }
+            indexClasse = Random.nextDouble().roundToInt()
         })
     }
-    fun verificarResultado(tipo_residuo: String): Boolean{
-        return (this.label.trim().equals(tipo_residuo))
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Shut down our background executor
+        cameraExecutor.shutdown()
     }
-    fun rand(from: Int, to: Int) : Int {
-        val random = Random()
-        return random.nextInt(to - from) + from
+
+    override fun onPause() {
+        super.onPause()
+        cameraExecutor.shutdown()
     }
+    /*
+    Compara se a classificação é igual a que foi pedida pelo método aleatório
+     */
+    private fun verificarResultado(tipo_residuo: String): Boolean{
+        Timer().schedule(object : TimerTask() {
+            override fun run() {
+                indexClasse = Random.nextDouble().roundToInt()
+                setTextWithDelay()
+            }
+        }, 3000)
+
+        return (this.label.trim() == tipo_residuo)
+    }
+
+    fun setTextWithDelay(){
+        this.runOnUiThread(Runnable {
+            viewBinding.imageButton.visibility = ImageButton.VISIBLE
+            viewBinding.textViewFind.text =
+                String.format("Procure por um resíduo %s.", residuo_para_procurar[indexClasse])
+        })
+    }
+
     private fun allPermissionsGranted() = CameraActivity.REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(
             baseContext, it) == PackageManager.PERMISSION_GRANTED
@@ -338,9 +371,10 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
     }
 
     private fun setarTexto(label: String?, score: Float?){
-        viewBinding.textViewResults.text = String.format("%s (%.2f)", label, score)
-        this.score = score!!
-        this.label = label!!
-
+        if (score != null) {
+            viewBinding.textViewResults.text = String.format("%s (%.0f%%)", label, (score * 100.0))
+            this.score = score!!
+            this.label = label!!
+        }
     }
 }

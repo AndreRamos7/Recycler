@@ -22,15 +22,12 @@ class MainActivity : AppCompatActivity() {
         //val btn: Button = findViewById(R.id.button)
 
         viewBinding.btnPlay.setOnClickListener(View.OnClickListener {
-            Toast.makeText(this, "Botão clicado!", Toast.LENGTH_SHORT).show()
             iniciarCamera()
         })
         viewBinding.btnHelp.setOnClickListener(View.OnClickListener {
-            Toast.makeText(this, "Botão clicado!", Toast.LENGTH_SHORT).show()
             iniciarHelp()
         })
         viewBinding.btnAbout.setOnClickListener(View.OnClickListener {
-            Toast.makeText(this, "Botão clicado!", Toast.LENGTH_SHORT).show()
             iniciarAbout()
         })
 
