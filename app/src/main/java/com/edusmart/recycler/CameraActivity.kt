@@ -2,6 +2,8 @@ package com.edusmart.recycler
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Bitmap
@@ -48,15 +50,21 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
     private var indexClasse: Int = Random.nextDouble().roundToInt()
     //só exibe o botão de verificação se já tiver resultados de classificação
     private var jaIniciado: Boolean = false
+    private var sharedPreferences: SharedPreferences? = null
+    private var qtdAcertos: Int = 0
+    private var qtdErros: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
+        sharedPreferences = this.getSharedPreferences("RecyclerDados", Context.MODE_PRIVATE)
+        atualizarPlacar()
         viewBinding = ActivityCameraBinding.inflate(layoutInflater)
 
         setContentView(viewBinding.root)
         this.viewBinding.imageButton.visibility = ImageButton.INVISIBLE
-        viewBinding.textViewFind.text = String.format("Procure por um resíduo %s.", residuo_para_procurar[indexClasse])
+        viewBinding.textViewFind.text =  String.format("Procure por um resíduo %s.\n[acertos = %d; erros = %d]",
+            residuo_para_procurar[indexClasse], qtdAcertos, qtdErros)
 
         imageClassifierHelper =
             ImageClassifierHelper(context = baseContext, imageClassifierListener = this)
@@ -64,11 +72,6 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
         if (allPermissionsGranted()) {
             startCamera()
         } else {
-            /*
-            ActivityCompat.requestPermissions(
-                this, CameraActivity.REQUIRED_PERMISSIONS, CameraActivity.REQUEST_CODE_PERMISSIONS
-            )
-             */
             Toast.makeText(this,"É necessário conceder as permissões.",Toast.LENGTH_LONG).show()
             this.finish()
         }
@@ -99,6 +102,12 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
         })
     }
 
+    private fun atualizarPlacar(){
+        // Recuperando um valor
+        qtdErros = sharedPreferences?.getInt("erros", 0)!!
+        qtdAcertos = sharedPreferences?.getInt("acertos", 0)!!
+
+    }
     override fun onDestroy() {
         super.onDestroy()
         // Shut down our background executor
@@ -120,7 +129,21 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
             }
         }, 3000)
 
-        return (this.label.trim() == tipo_residuo)
+        var resultado = (this.label.trim() == tipo_residuo)
+        if(resultado) {
+            qtdAcertos++
+        }else{
+            qtdErros++
+        }
+
+        // Salvando um valor
+        val editor = sharedPreferences?.edit()
+        editor?.putInt("erros", qtdErros)
+        editor?.putInt("acertos", qtdAcertos)
+        editor?.apply()
+
+        atualizarPlacar()
+        return resultado
     }
     /*
     * Retorna a exibir o botão e outro texto para uma nova tarefa para o usuário
@@ -129,7 +152,8 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
         this.runOnUiThread(Runnable {
             viewBinding.imageButton.visibility = ImageButton.VISIBLE
             viewBinding.textViewFind.text =
-                String.format("Procure por um resíduo %s.", residuo_para_procurar[indexClasse])
+                String.format("Procure por um resíduo %s.\n[acertos = %d; erros = %d]",
+                    residuo_para_procurar[indexClasse], qtdAcertos, qtdErros)
         })
     }
 
