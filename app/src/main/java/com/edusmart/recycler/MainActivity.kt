@@ -16,6 +16,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
+        supportActionBar?.hide()
         setContentView(viewBinding.root)
 
         //val btn: Button = findViewById(R.id.button)
@@ -25,7 +26,7 @@ class MainActivity : AppCompatActivity() {
             iniciarImersao()
         })
 
-        viewBinding.btnNormal.setOnClickListener(View.OnClickListener {
+        viewBinding.btnPlay.setOnClickListener(View.OnClickListener {
             Toast.makeText(this, "Botão clicado!", Toast.LENGTH_SHORT).show()
             iniciarCamera()
 
