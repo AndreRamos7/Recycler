@@ -28,6 +28,7 @@ import java.io.IOException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.min
+import java.util.Random
 
 class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierListener {
     private lateinit var imageClassifierHelper: ImageClassifierHelper
@@ -38,12 +39,16 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
     var mMediaPlayer: MediaPlayer? = null
     private var score: Float = 0.0f
     private var label: String = ""
+    private var residuo_para_procurar: Array<String> = arrayOf("organic", "recycled")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
         viewBinding = ActivityCameraBinding.inflate(layoutInflater)
+        var indexClasse:Int = rand(1,2) - 1
         setContentView(viewBinding.root)
+        viewBinding.textViewFind.text = String.format("Procure por um resíduo %s.", residuo_para_procurar[indexClasse])
+
         imageClassifierHelper =
             ImageClassifierHelper(context = baseContext, imageClassifierListener = this)
 
@@ -56,6 +61,12 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
         }
         cameraExecutor = Executors.newSingleThreadExecutor()
         viewBinding.imageButton.setOnClickListener(View.OnClickListener {
+            if(verificarResultado(residuo_para_procurar[indexClasse])){
+                viewBinding.textViewFind.text = String.format("Correto!!")
+            }else{
+                viewBinding.textViewFind.text = String.format("Incorreto!!")
+            }
+
             if(score < 0.50f){
                 stopSound()
                 playSound(R.raw.fail)
@@ -70,10 +81,14 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
                     playSound(R.raw.organic)
                 }
             }
-
         })
-
-
+    }
+    fun verificarResultado(tipo_residuo: String): Boolean{
+        return (this.label.trim().equals(tipo_residuo))
+    }
+    fun rand(from: Int, to: Int) : Int {
+        val random = Random()
+        return random.nextInt(to - from) + from
     }
     private fun allPermissionsGranted() = CameraActivity.REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(
@@ -186,9 +201,6 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
                             if (!::bitmapBuffer.isInitialized) {
                                 // The image rotation and RGB image buffer are initialized only once
                                 // the analyzer has started running
-                                /*var rect: Rect = Rect()
-                                rect.set(300,100,100,100)
-                                image.setCropRect(rect)*/
 
                                 bitmapBuffer = Bitmap.createBitmap(
                                     image.width,
@@ -196,8 +208,6 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
                                     Bitmap.Config.ARGB_8888
                                 )
                             }
-
-
                             //this.setImage(viewBinding.viewFinder2, bitmapBuffer)
                             classifyImage(image)
                         }
@@ -328,7 +338,7 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
     }
 
     private fun setarTexto(label: String?, score: Float?){
-        viewBinding.textView3.text = String.format("%s (%.2f)", label, score)
+        viewBinding.textViewResults.text = String.format("%s (%.2f)", label, score)
         this.score = score!!
         this.label = label!!
 

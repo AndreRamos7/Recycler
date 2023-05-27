@@ -21,15 +21,17 @@ class MainActivity : AppCompatActivity() {
 
         //val btn: Button = findViewById(R.id.button)
 
-        viewBinding.btnVr.setOnClickListener(View.OnClickListener {
-            Toast.makeText(this, "Botão clicado!", Toast.LENGTH_SHORT).show()
-            iniciarImersao()
-        })
-
         viewBinding.btnPlay.setOnClickListener(View.OnClickListener {
             Toast.makeText(this, "Botão clicado!", Toast.LENGTH_SHORT).show()
             iniciarCamera()
-
+        })
+        viewBinding.btnHelp.setOnClickListener(View.OnClickListener {
+            Toast.makeText(this, "Botão clicado!", Toast.LENGTH_SHORT).show()
+            iniciarHelp()
+        })
+        viewBinding.btnAbout.setOnClickListener(View.OnClickListener {
+            Toast.makeText(this, "Botão clicado!", Toast.LENGTH_SHORT).show()
+            iniciarAbout()
         })
 
         cameraViewModel = ViewModelProvider(this)[CameraViewModel::class.java]
@@ -40,6 +42,14 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+    private fun iniciarAbout() {
+        val intent = Intent(this, AboutActivity::class.java)
+        startActivity(intent)
+    }
+    private fun iniciarHelp() {
+        val intent = Intent(this, HelpActivity::class.java)
+        startActivity(intent)
+    }
     private fun iniciarImersao(){
         val intent = Intent(this, VRActivity::class.java)
         startActivity(intent)
