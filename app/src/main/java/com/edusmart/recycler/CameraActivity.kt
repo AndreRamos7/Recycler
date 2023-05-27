@@ -3,6 +3,7 @@ package com.edusmart.recycler
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.media.AudioAttributes
@@ -22,6 +23,7 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import com.edusmart.recycler.databinding.ActivityCameraBinding
 import org.tensorflow.lite.support.label.Category
 import org.tensorflow.lite.task.vision.classifier.Classifications
@@ -44,14 +46,16 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
     private var label: String = ""
     private var residuo_para_procurar: Array<String> = arrayOf("organic", "recycled")
     private var indexClasse: Int = Random.nextDouble().roundToInt()
+    //só exibe o botão de verificação se já tiver resultados de classificação
+    private var jaIniciado: Boolean = false
 
-        override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
         viewBinding = ActivityCameraBinding.inflate(layoutInflater)
 
         setContentView(viewBinding.root)
-
+        this.viewBinding.imageButton.visibility = ImageButton.INVISIBLE
         viewBinding.textViewFind.text = String.format("Procure por um resíduo %s.", residuo_para_procurar[indexClasse])
 
         imageClassifierHelper =
@@ -60,9 +64,13 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
         if (allPermissionsGranted()) {
             startCamera()
         } else {
+            /*
             ActivityCompat.requestPermissions(
                 this, CameraActivity.REQUIRED_PERMISSIONS, CameraActivity.REQUEST_CODE_PERMISSIONS
             )
+             */
+            Toast.makeText(this,"É necessário conceder as permissões.",Toast.LENGTH_LONG).show()
+            this.finish()
         }
         cameraExecutor = Executors.newSingleThreadExecutor()
         viewBinding.imageButton.setOnClickListener(View.OnClickListener {
@@ -114,7 +122,9 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
 
         return (this.label.trim() == tipo_residuo)
     }
-
+    /*
+    * Retorna a exibir o botão e outro texto para uma nova tarefa para o usuário
+    * */
     fun setTextWithDelay(){
         this.runOnUiThread(Runnable {
             viewBinding.imageButton.visibility = ImageButton.VISIBLE
@@ -204,8 +214,14 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
             mMediaPlayer = null
         }
     }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        imageAnalyzer?.targetRotation = viewBinding.viewFinder.display.rotation
+    }
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        //setarTexto("",0.0f)
 
         cameraProviderFuture.addListener({
             // Used to bind the lifecycle of cameras to the lifecycle owner
@@ -213,19 +229,23 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
 
             // Preview
             val preview = Preview.Builder()
+                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                .setTargetRotation(viewBinding.viewFinder.display?.rotation!!)
                 .build()
                 .also {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
 
 
+            /*if(viewBinding.viewFinder.display != null){}*/
             // ImageAnalysis. Using RGBA 8888 to match how our models work
             imageAnalyzer =
                 ImageAnalysis.Builder()
                     //.setTargetResolution(Size(200,200))
                     .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                    .setTargetRotation(viewBinding.viewFinder.display.rotation)
+                    .setTargetRotation(viewBinding.viewFinder.display?.rotation!!)
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .setImageQueueDepth(1)
                     .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                     .build()
                     // The analyzer can then be assigned to the instance
@@ -269,6 +289,7 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
 
         // Pass Bitmap and rotation to the image classifier helper for processing and classification
         imageClassifierHelper.classify(bitmapBuffer, getScreenOrientation())
+        image.close() //será necessário??
     }
 
     private fun getScreenOrientation() : Int {
@@ -290,7 +311,6 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
 
     companion object {
         private const val TAG = "CameraActivity"
-        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
         private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
@@ -348,7 +368,7 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
                     }
                 }
             }catch (e: IndexOutOfBoundsException){
-                e.message?.let { Log.e(TAG, "AIAIAI: " + it) }
+                e.message?.let { /*Log.e(TAG, "AIAIAI: " + it)*/ }
             } finally {
                 // optional finally block
             }
@@ -369,12 +389,17 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
             //String.format("%d ms", inferenceTime).also { viewBinding.textView3.text = it }
         }
     }
-
+    /*
+    * Atualiza o resultado da classificação
+    * */
     private fun setarTexto(label: String?, score: Float?){
+        if(!jaIniciado)
+            this.viewBinding.imageButton.visibility = if(!viewBinding.imageButton.isVisible) ImageButton.VISIBLE else ImageButton.INVISIBLE
         if (score != null) {
             viewBinding.textViewResults.text = String.format("%s (%.0f%%)", label, (score * 100.0))
-            this.score = score!!
+            this.score = score
             this.label = label!!
         }
+        jaIniciado = true
     }
 }
