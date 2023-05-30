@@ -21,6 +21,7 @@ import android.graphics.Bitmap
 import android.os.SystemClock
 import android.util.Log
 import android.view.Surface
+import android.widget.Toast
 import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
@@ -35,7 +36,7 @@ class ImageClassifierHelper(
     var numThreads: Int = 2,
     var maxResults: Int = 3,
     var currentDelegate: Int = 0,
-    var currentModel: Int = 0,
+    var currentModel: Int = 3,
     val context: Context,
     val imageClassifierListener: ClassifierListener?
 ) {
@@ -80,7 +81,7 @@ class ImageClassifierHelper(
                 MODEL_WASTE_5EP_Q_DATASET -> "waste_model5epochs_quantized.tflite"
                 else -> "waste_model5epochs.tflite"
             }
-
+        //Toast.makeText(this.context, modelName, Toast.LENGTH_SHORT).show()
 
         try {
             imageClassifier =
@@ -152,8 +153,8 @@ class ImageClassifierHelper(
         const val DELEGATE_CPU = 0
         const val DELEGATE_GPU = 1
         const val DELEGATE_NNAPI = 2
-        const val MODEL_WASTE_5EP_DATASET = 6
-        const val MODEL_WASTE_5EP_Q_DATASET = 7
+        const val MODEL_WASTE_5EP_DATASET = 3
+        const val MODEL_WASTE_5EP_Q_DATASET = 4
 
         private const val TAG = "ImageClassifierHelper"
     }

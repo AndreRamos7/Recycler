@@ -7,13 +7,12 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Display
@@ -21,9 +20,9 @@ import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.edusmart.recycler.databinding.ActivityCameraBinding
@@ -38,6 +37,8 @@ import kotlin.math.roundToInt
 import kotlin.random.Random
 
 class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierListener {
+    private lateinit var cameraProvider: ProcessCameraProvider
+    private lateinit var camera: Camera
     private lateinit var imageClassifierHelper: ImageClassifierHelper
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var viewBinding: ActivityCameraBinding
@@ -80,6 +81,7 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
             it.visibility = ImageButton.INVISIBLE
             if(verificarResultado(residuo_para_procurar[indexClasse])){
                 viewBinding.textViewFind.text = String.format("Correto!!")
+                viewBinding.textViewFind.textSize = 16.0f
             }else{
                 viewBinding.textViewFind.text = String.format("Incorreto!!")
             }
@@ -100,8 +102,29 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
             }
             indexClasse = Random.nextDouble().roundToInt()
         })
+        //showDeviceInfo()
     }
 
+    override fun onResume() {
+        super.onResume()
+        stopCamera()
+        startCamera()
+    }
+    private fun showDeviceInfo(){
+        val codeName = Build.VERSION.CODENAME
+        val incremental = Build.VERSION.INCREMENTAL
+        val release = Build.VERSION.RELEASE
+        val produto = Build.PRODUCT
+        val modelo = Build.MODEL
+        val fabricante = Build.MANUFACTURER
+        val hardware = Build.HARDWARE
+        val board = Build.BOARD
+        val device = Build.DEVICE
+
+        //Toast.makeText(this, String.format("codename = %s, incremental = %s, release = %s", codeName, incremental, release),  Toast.LENGTH_LONG).show()
+        Toast.makeText(this, String.format("hardwares = %s, placa = %s, device = %s", hardware, board, device),  Toast.LENGTH_LONG).show()
+        Toast.makeText(this, String.format("produto = %s, modelo = %s, fabricante = %s", produto, modelo, fabricante),  Toast.LENGTH_LONG).show()
+    }
     private fun atualizarPlacar(){
         // Recuperando um valor
         qtdErros = sharedPreferences?.getInt("erros", 0)!!
@@ -117,6 +140,7 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
     override fun onPause() {
         super.onPause()
         cameraExecutor.shutdown()
+        this.finish()
     }
     /*
     Compara se a classificação é igual a que foi pedida pelo método aleatório
@@ -243,13 +267,19 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
         super.onConfigurationChanged(newConfig)
         imageAnalyzer?.targetRotation = viewBinding.viewFinder.display.rotation
     }
+    private fun stopCamera() {
+        if (::camera.isInitialized) {
+            cameraProvider.unbindAll()
+            cameraExecutor.shutdown()
+        }
+    }
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         //setarTexto("",0.0f)
 
         cameraProviderFuture.addListener({
             // Used to bind the lifecycle of cameras to the lifecycle owner
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+            cameraProvider = cameraProviderFuture.get()
 
             // Preview
             val preview = Preview.Builder()
@@ -287,6 +317,7 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
                             }
                             //this.setImage(viewBinding.viewFinder2, bitmapBuffer)
                             classifyImage(image)
+
                         }
                     }
             // Select back camera as a default
@@ -297,7 +328,7 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
                 cameraProvider.unbindAll()
                 var useCases = arrayOf(preview, imageAnalyzer)
                 // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
+                camera = cameraProvider.bindToLifecycle(
                     this, cameraSelector, *useCases)
 
             } catch(exc: Exception) {
@@ -388,7 +419,7 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
                 if (results != null) {
                     if(results.isNotEmpty()){
                         //Log.e(TAG, "resultados = " + (results?.get(0)?.categories?.get(0)?.label ?: "--")/*String.format("%", )*/)
-                        setarTexto((results?.get(0)?.categories?.get(0)?.label ?: "--"), (results?.get(0)?.categories?.get(0)?.score ?: 0.0f))
+                        setarTexto((results?.get(0)?.categories?.get(0)?.label ?: "--"), (results?.get(0)?.categories?.get(0)?.score ?: 0.0f), inferenceTime)
                     }
                 }
             }catch (e: IndexOutOfBoundsException){
@@ -407,7 +438,7 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
             }
             if(categories.size > 0)
                 categories[0].let { category ->
-                    setarTexto(category?.label, category?.score)
+                    //setarTexto(category?.label, category?.score, inferenceTime)
                 }
             //viewBinding.textView3.text = categories.get()?.label
             //String.format("%d ms", inferenceTime).also { viewBinding.textView3.text = it }
@@ -416,14 +447,17 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
     /*
     * Atualiza o resultado da classificação
     * */
-    private fun setarTexto(label: String?, score: Float?){
-        if(!jaIniciado)
-            this.viewBinding.imageButton.visibility = if(!viewBinding.imageButton.isVisible) ImageButton.VISIBLE else ImageButton.INVISIBLE
+    private fun setarTexto(label: String?, score: Float?, inferenceTime: Long?){
+        if(!jaIniciado) {
+            this.viewBinding.imageButton.visibility =
+                if (!viewBinding.imageButton.isVisible) ImageButton.VISIBLE else ImageButton.INVISIBLE
+            jaIniciado = true
+        }
         if (score != null) {
-            viewBinding.textViewResults.text = String.format("%s (%.0f%%)", label, (score * 100.0))
+            viewBinding.textViewResults.text = String.format("%s (%.0f%%) em %dms", label, (score * 100.0), inferenceTime)
             this.score = score
             this.label = label!!
         }
-        jaIniciado = true
+
     }
 }
