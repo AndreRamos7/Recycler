@@ -25,9 +25,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(viewBinding.root)
 
         //val btn: Button = findViewById(R.id.button)
-        if (allPermissionsGranted()) {
-            Toast.makeText(this,"Permissões concedidas.",Toast.LENGTH_LONG).show()
-        } else {
+        if (!allPermissionsGranted())  {
             ActivityCompat.requestPermissions(
                 this, MainActivity.REQUIRED_PERMISSIONS, MainActivity.REQUEST_CODE_PERMISSIONS
             )

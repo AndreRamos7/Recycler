@@ -36,7 +36,7 @@ class ImageClassifierHelper(
     var numThreads: Int = 2,
     var maxResults: Int = 3,
     var currentDelegate: Int = 0,
-    var currentModel: Int = 3,
+    var currentModel: Int = 5,
     val context: Context,
     val imageClassifierListener: ClassifierListener?
 ) {
@@ -77,7 +77,9 @@ class ImageClassifierHelper(
 
         val modelName =
             when (currentModel) {
-                MODEL_WASTE_5EP_DATASET -> "waste_model5epochs.tflite"
+                MODEL_WASTE_7EP_DATASET -> "waste_model07epochs.tflite"
+                MODEL_WASTE_7EP_Q_DATASET -> "waste_model07epochs_quantized.tflite"
+                MODEL_WASTE_5EP_DATASET -> "waste_model5epochs.tflite" /* 1ºs modelos funcionais */
                 MODEL_WASTE_5EP_Q_DATASET -> "waste_model5epochs_quantized.tflite"
                 else -> "waste_model5epochs.tflite"
             }
@@ -155,6 +157,8 @@ class ImageClassifierHelper(
         const val DELEGATE_NNAPI = 2
         const val MODEL_WASTE_5EP_DATASET = 3
         const val MODEL_WASTE_5EP_Q_DATASET = 4
+        const val MODEL_WASTE_7EP_DATASET = 5
+        const val MODEL_WASTE_7EP_Q_DATASET = 6
 
         private const val TAG = "ImageClassifierHelper"
     }

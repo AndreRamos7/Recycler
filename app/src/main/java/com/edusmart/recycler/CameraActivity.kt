@@ -47,7 +47,7 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
     var mMediaPlayer: MediaPlayer? = null
     private var score: Float = 0.0f
     private var label: String = ""
-    private var residuo_para_procurar: Array<String> = arrayOf("organic", "recycled")
+    private var residuo_para_procurar: Array<String> = arrayOf("orgânico", "reciclável")
     private var indexClasse: Int = Random.nextDouble().roundToInt()
     //só exibe o botão de verificação se já tiver resultados de classificação
     private var jaIniciado: Boolean = false
@@ -92,10 +92,10 @@ class CameraActivity : AppCompatActivity(), ImageClassifierHelper.ClassifierList
             }else{
                 stopSound()
                 Log.d(TAG, label)
-                if(this.label.trim() == "recycled"){
+                if(this.label.trim() == "reciclável"){
                     /*Log.d(TAG, "recycled")*/
                     playSound(R.raw.recycled)
-                }else if(this.label.trim() == "organic"){
+                }else if(this.label.trim() == "orgânico"){
                     /*Log.d(TAG, "ORGANICO")*/
                     playSound(R.raw.organic)
                 }
