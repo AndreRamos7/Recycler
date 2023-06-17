@@ -32,11 +32,11 @@ import org.tensorflow.lite.task.vision.classifier.Classifications
 import org.tensorflow.lite.task.vision.classifier.ImageClassifier
 
 class ImageClassifierHelper(
-    var threshold: Float = 0.5f,
+    var threshold: Float = 0.51f,
     var numThreads: Int = 2,
     var maxResults: Int = 3,
     var currentDelegate: Int = 0,
-    var currentModel: Int = 5,
+    var currentModel: Int = 6,
     val context: Context,
     val imageClassifierListener: ClassifierListener?
 ) {
@@ -77,8 +77,12 @@ class ImageClassifierHelper(
 
         val modelName =
             when (currentModel) {
-                MODEL_WASTE_7EP_DATASET -> "waste_model07epochs.tflite"
-                MODEL_WASTE_7EP_Q_DATASET -> "waste_model07epochs_quantized.tflite"
+                MODEL_WASTE_10EP_DATASET -> "waste_model10epochs.tflite"
+                MODEL_WASTE_10EP_Q_DATASET -> "waste_model10epochs_quantized.tflite"
+                MODEL_WASTE_07EP_DATASET -> "waste_model07epochs.tflite"
+                MODEL_WASTE_07EP_Q_DATASET -> "waste_model07epochs_quantized.tflite"
+                MODEL_WASTE_06EP_DATASET -> "waste_model06epochs.tflite"
+                MODEL_WASTE_06EP_Q_DATASET -> "waste_model06epochs_quantized.tflite"
                 MODEL_WASTE_5EP_DATASET -> "waste_model5epochs.tflite" /* 1ºs modelos funcionais */
                 MODEL_WASTE_5EP_Q_DATASET -> "waste_model5epochs_quantized.tflite"
                 else -> "waste_model5epochs.tflite"
@@ -157,8 +161,12 @@ class ImageClassifierHelper(
         const val DELEGATE_NNAPI = 2
         const val MODEL_WASTE_5EP_DATASET = 3
         const val MODEL_WASTE_5EP_Q_DATASET = 4
-        const val MODEL_WASTE_7EP_DATASET = 5
-        const val MODEL_WASTE_7EP_Q_DATASET = 6
+        const val MODEL_WASTE_07EP_DATASET = 5
+        const val MODEL_WASTE_07EP_Q_DATASET = 6 //tvz o melhor
+        const val MODEL_WASTE_10EP_DATASET = 7
+        const val MODEL_WASTE_10EP_Q_DATASET = 8
+        const val MODEL_WASTE_06EP_DATASET = 9
+        const val MODEL_WASTE_06EP_Q_DATASET = 10
 
         private const val TAG = "ImageClassifierHelper"
     }

@@ -16,6 +16,7 @@
         android:paddingEnd="10sp"
         android:paddingBottom="10sp"
         android:text="@string/txt_about"
+        android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
